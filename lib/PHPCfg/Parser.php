@@ -1245,11 +1245,18 @@ class Parser
 
     protected function parseExpr_MethodCall(Expr\MethodCall $expr)
     {
+        $var = $this->readVariable($this->parseExprNode($expr->var));
+        $name = $this->readVariable($this->parseExprNode($expr->name));
+        $children = Func::findRelatedMethodBlocks($var, $name);
+        foreach ($children as $methodBlock) {
+            $this->block->children[] = $methodBlock;
+        }
         return new Op\Expr\MethodCall(
-            $this->readVariable($this->parseExprNode($expr->var)),
-            $this->readVariable($this->parseExprNode($expr->name)),
+            $var,
+            $name,
             $this->parseExprList($expr->args, self::MODE_READ),
-            $this->mapAttributes($expr)
+            $this->mapAttributes($expr),
+            empty($children) ? null : current($children)->cfg
         );
     }
 
@@ -1331,7 +1338,8 @@ class Parser
     {
         $class = $this->readVariable($this->parseExprNode($expr->class));
         $name = $this->readVariable($this->parseExprNode($expr->name));
-        foreach (Func::findRelatedMethodBlocks($class, $name) as $methodBlock) {
+        $children = Func::findRelatedMethodBlocks($class, $name);
+        foreach ($children as $methodBlock) {
             $this->block->children[] = $methodBlock;
         }
 
@@ -1340,7 +1348,7 @@ class Parser
             $name,
             $this->parseExprList($expr->args, self::MODE_READ),
             $this->mapAttributes($expr),
-            current(Func::findRelatedMethodBlocks($class, $name))->cfg
+            empty($children) ? null : current($children)->cfg
         );
     }
 

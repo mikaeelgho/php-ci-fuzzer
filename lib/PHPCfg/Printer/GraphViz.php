@@ -58,7 +58,8 @@ class GraphViz extends Printer
     public function printFunc(Func $func)
     {
         $graph = $this->createGraph();
-        $this->printFuncInfo($func, $graph, '');
+        $rendered = [];
+        $this->printFuncInfo($func, $graph, new \SplObjectStorage(), $rendered, '');
 
         return $graph;
     }
@@ -112,16 +113,16 @@ class GraphViz extends Printer
     {
         $name = $func->getScopedName();
         $header = $this->createNode(
-            $prefix.'header', "Function {$name}():"
+            $prefix . 'header', (substr($func->getFile(), 12)) . ":" . ($func->getLine())
         );
         $graph->setNode($header);
 
-        $start = $this->printFuncInto($func, $graph, $nodes, $rendered, $prefix);
+        $start = $this->printFuncInfo($func, $graph, $nodes, $rendered, $prefix);
         $edge = $this->createEdge($header, $start);
         $graph->link($edge);
     }
 
-    protected function printFuncInto(Func $func, Graph $graph, \SplObjectStorage $nodes, array &$rendered, $prefix)
+    protected function printFuncInfo(Func $func, Graph $graph, \SplObjectStorage $nodes, array &$rendered, $prefix)
     {
         $newRendered = $this->render($func);
         $rendered[$func->getScopedName()] = $newRendered;
@@ -129,14 +130,23 @@ class GraphViz extends Printer
             $blockId = $newRendered['blockIds'][$block];
             $ops = $newRendered['blocks'][$block];
             $output = '';
-            /**
-             * @var OP $firstOp
-             */
-            //$firstOp = $ops[0]['op'];
-            //$output .= $this->indent("\n" . ($firstOp->getFile()) . ":" . ($firstOp->getLine()));
-            //$output .= $this->indent("\n" . $ops[0]['label']) . ($firstOp->getFile()) . " " . ($firstOp->getLine());
+            $firstLine = -1;
+            $lastLine = -1;
+            $fileName = "unknown";
             foreach ($ops as $op) {
-                $output .= $this->indent("\n" . $op['label']);
+                //$output .= $this->indent("\n" . $op['label'] . "\n\n");
+                if ($op['op']->getFile() != 'unknown') {
+                    $fileName = substr($op['op']->getFile(), 12);
+                }
+                if ($op['op']->getLine() != -1) {
+                    $lastLine = $op['op']->getLine();
+                    if ($firstLine == -1) {
+                        $firstLine = $op['op']->getLine();
+                    }
+                }
+            }
+            if ($firstLine != -1) {
+                $output .= $fileName . ":" . $firstLine . '-' . $lastLine;
             }
             $nodes[$block] = $this->createNode($prefix . 'block_' . $blockId, $output);
             $graph->setNode($nodes[$block]);

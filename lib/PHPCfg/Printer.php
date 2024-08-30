@@ -258,14 +258,7 @@ abstract class Printer
 
     protected function enqueueBlock(Block $block)
     {
-        $cont = false;
-        foreach ($this->blocks as $b) {
-            if ($b->id == $block->id) $cont = true;
-        }
-        if($cont!=$this->blocks->contains($block)){
-            error_log("EFOIHFIHEFOH");
-        }
-        if (!$cont) {
+        if (!$this->blocks->contains($block)) {
             $this->blocks[$block] = count($this->blocks) + 1;
             $this->blockQueue->enqueue($block);
         }
@@ -308,6 +301,8 @@ abstract class Printer
         }
         $varIds = $this->varIds;
         $blockIds = $this->blocks;
+        $this->blockQueue = new \SplQueue();
+        $this->varIds = new \SplObjectStorage();
         //$this->reset();
 
         return [

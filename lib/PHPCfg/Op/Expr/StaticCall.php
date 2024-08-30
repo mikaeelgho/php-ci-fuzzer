@@ -23,7 +23,7 @@ class StaticCall extends Expr
 
     public array $args;
 
-    public Block $call;
+    public ?Block $call;
 
     public function __construct(Operand $class, Operand $name, array $args, array $attributes, ?Block $call)
     {
