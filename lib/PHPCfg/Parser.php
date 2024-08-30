@@ -74,7 +74,7 @@ class Parser
      * @param string $fileName
      * @returns Script
      */
-    public function parse($code, $fileName)
+    public function parse(string $code, string $fileName): Script
     {
         return $this->parseAst($this->astParser->parse($code), $fileName);
     }
@@ -269,7 +269,8 @@ class Parser
             $node->name->toString(),
             $node->flags | ($node->byRef ? Func::FLAG_RETURNS_REF : 0),
             $this->parseTypeNode($node->returnType),
-            $this->currentClass
+            $this->currentClass,
+            $this->mapAttributes($node)
         );
 
         if ($node->stmts !== null) {
@@ -423,6 +424,7 @@ class Parser
             $node->byRef ? Func::FLAG_RETURNS_REF : 0,
             $this->parseTypeNode($node->returnType),
             null,
+            $this->mapAttributes($node)
         );
         $this->parseFunc($func, $node->params, $node->stmts, null);
         $this->block->children[] = $function = new Op\Stmt\Function_($func, $this->parseAttributeGroups($node->attrGroups), $this->mapAttributes($node));
@@ -1049,7 +1051,8 @@ class Parser
             '{anonymous}#'.++$this->anonId,
             $flags,
             $this->parseTypeNode($expr->returnType),
-            null
+            null,
+            $this->mapAttributes($expr)
         );
         $this->parseFunc($func, $expr->params, $expr->stmts, null);
 

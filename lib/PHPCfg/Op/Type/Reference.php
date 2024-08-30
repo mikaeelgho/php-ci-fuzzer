@@ -20,6 +20,7 @@ class Reference extends Type
     public Operand $declaration;
 
     public function __construct(Operand $declaration, array $attributes = []) {
+        parent::__construct($attributes);
         $this->declaration = $declaration;
     }
 

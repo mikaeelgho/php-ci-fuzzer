@@ -19,6 +19,7 @@ class Union extends Type
     public array $subtypes;
 
     public function __construct(array $subtypes, array $attributes = []) {
+        parent::__construct($attributes);
         $this->subtypes = $subtypes;
     }
 

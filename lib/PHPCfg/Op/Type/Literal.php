@@ -19,7 +19,9 @@ class Literal extends Type
 {
     public string $name;
 
-    public function __construct(string $name, array $attributes = []) {
+    public function __construct(string $name, array $attributes = [])
+    {
+        parent::__construct($attributes);
         $this->name = $name;
     }
 

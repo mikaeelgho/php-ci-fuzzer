@@ -19,6 +19,7 @@ class Nullable extends Type
     public Type $subtype;
 
     public function __construct(Type $subtype, array $attributes = []) {
+        parent::__construct($attributes);
         $this->subtype = $subtype;
     }
 
