@@ -87,24 +87,16 @@ class SimpleGraphPrinter extends Printer
                     $fileName = substr($op['op']->getFile(), 12);
                 }
                 if ($op['op']->getLine() != -1) {
-                    $lastLine = $op['op']->getLine();
+                    $lastLine = max($op['op']->getLine(), $lastLine);
                     if ($firstLine == -1) {
                         $firstLine = $op['op']->getLine();
+                    } else {
+                        $firstLine = max($op['op']->getLine(), $firstLine);
                     }
                 }
             }
             if ($firstLine != -1) {
                 $output = $fileName . ":" . $firstLine . '-' . $lastLine;
-                if ($firstLine == 12 && $lastLine == 24) {
-                    foreach ($ops as $op) {
-                        if ($op['op'] instanceof Phi || $op['op'] instanceof Func) {
-                            continue;
-                        }
-                        error_log(get_class($op['op']));
-                        error_log($op['label'] . "   -    " . $op['op']->getType());
-                        error_log("" . $op['op']->getLine());
-                    }
-                }
             }
             $nodes[$block] = $this->createNode($prefix . 'block_' . $blockId, $output);
             //$graph->setNode($nodes[$block]);
@@ -118,6 +110,9 @@ class SimpleGraphPrinter extends Printer
         foreach ($rendered[$funcScopedName]['blocks'] as $block) {
             foreach ($rendered[$funcScopedName]['blocks'][$block] as $op) {
                 foreach ($op['childBlocks'] as $child) {
+                    if (strlen($nodes[$child['block']]->getName()) == 0) {
+                        continue;
+                    }
                     $edge = $this->createEdge($nodes[$block], $nodes[$child['block']]);
                     $edge->setlabel($child['name']);
                     $edges[] = ($edge);

@@ -52,6 +52,7 @@ class Simplifier extends AbstractVisitor
         }
         $this->recursionProtection->attach($op);
         foreach ($op->getSubBlocks() as $name) {
+            if(!isset($op->{$name})) continue;
             /** @var Block $block */
             $targets = $op->{$name};
             if (! is_array($targets)) {

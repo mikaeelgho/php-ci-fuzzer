@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @license MIT See LICENSE at the root of the project for more info
  */
 
+use PHPCfg\Func;
 use PhpParser\ParserFactory;
 
 require __DIR__ . '/vendor/autoload.php';
@@ -79,6 +80,6 @@ function mergeFiles(array $files, PHPCfg\Parser $parser)
             $combinedScript->main = $script->main;
         }
     }
-
+    Func::recalculateCalls();
     return $combinedScript;
 }

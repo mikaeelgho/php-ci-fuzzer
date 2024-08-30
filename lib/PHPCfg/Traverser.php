@@ -66,6 +66,7 @@ class Traverser
             $op = $children[$i];
             $this->event('enterOp', [$op, $block]);
             foreach ($op->getSubBlocks() as $subblock) {
+                if(!isset($op->{$subblock})) continue;
                 $sub = $op->{$subblock};
                 if (! $sub) {
                     continue;

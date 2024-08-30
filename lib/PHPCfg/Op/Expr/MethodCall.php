@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace PHPCfg\Op\Expr;
 
 use PHPCfg\Block;
+use PHPCfg\Func;
 use PHPCfg\Op\Expr;
 use PhpCfg\Operand;
 
@@ -22,15 +23,27 @@ class MethodCall extends Expr
     public Operand $name;
 
     public array $args;
+    public Block $inBlock;
     public ?Block $call;
 
-    public function __construct(Operand $var, Operand $name, array $args, array $attributes, ?Block $call)
+    public function __construct(Operand $var, Operand $name, array $args, array $attributes, Block $inBlock)
     {
         parent::__construct($attributes);
         $this->var = $this->addReadRef($var);
         $this->name = $this->addReadRef($name);
         $this->args = $this->addReadRefs(...$args);
-        $this->call = $call;
+        $this->inBlock = $inBlock;
+        $this->call = null;
+        Func::addMethodCall($this);
+    }
+
+    public function updateCall()
+    {
+        $children = Func::findRelatedMethodBlocks($this->var, $this->name);
+        foreach ($children as $methodBlock) {
+            $this->inBlock->children[] = $methodBlock;
+        }
+        $this->call = empty($children) ? null : current($children)->cfg;
     }
 
     public function getVariableNames(): array

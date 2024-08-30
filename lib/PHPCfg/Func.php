@@ -16,6 +16,12 @@ use PHPCfg\Op\CallableOp;
 class Func extends Op
 {
     private static array $allFunctions = [];
+    private static array $allMethodCalls = [];
+
+    public static function addMethodCall($call)
+    {
+        self::$allMethodCalls[] = $call;
+    }
 
     /* Constants for the $flags property.
      * The first six flags match PhpParser Class_ flags. */
@@ -92,5 +98,13 @@ class Func extends Op
             }
         }
         return [];
+    }
+
+
+    public static function recalculateCalls()
+    {
+        foreach (self::$allMethodCalls as $methodCall) {
+            $methodCall->updateCall();
+        }
     }
 }
