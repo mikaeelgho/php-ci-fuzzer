@@ -14,7 +14,7 @@ for trace_file in trace_files:
     
     with gzip.open(trace_path, 'rt') as f:
         for line in f:
-            match = re.search(r'->.*\) ([^:]+):(\d+)', line)
+            match = re.search(r'->.*\) /app/example/src/([^:]+):(\d+)', line)
             if match:
                 file_path = f"{match.group(1)}:{match.group(2)}"
                 trace_lines.append(file_path)
