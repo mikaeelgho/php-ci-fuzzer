@@ -175,17 +175,6 @@ abstract class Printer
             $result .= $this->renderAttrGroups($op->attrGroups);
             $result .= "\n    declaredType: " . $this->indent($this->renderType($op->declaredType));
         }
-        /*if ($op instanceof Op\Expr\MethodCall) {
-            error_log($op->getType());
-            error_log($op->getFile());
-            error_log("+" . $op->getLine());
-            return [
-                'op' => $op,
-                'label' => "method call " . ($op->getFile()) . " : " . ($op->getLine()),
-                'childBlocks' => [],
-            ];
-            //$result .= "\n    declaredType: " . $this->indent($this->renderType($op));
-        }*/
         if ($op instanceof Op\Expr\Include_) {
             $result .= "\n    type: " . $this->indent($this->renderIncludeType($op->type));
         }
