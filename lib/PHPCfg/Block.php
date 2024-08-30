@@ -31,6 +31,14 @@ class Block
         }
     }
 
+    public function getAttributes(): array
+    {
+        if (count($this->phi) == 0) {
+            return ['block' => $this];
+        }
+        return array_merge(current($this->phi)->getAttributes(), ['block' => $this]);
+    }
+
     public function create()
     {
         return new static();
@@ -38,7 +46,7 @@ class Block
 
     public function addParent(self $parent)
     {
-        if (! in_array($parent, $this->parents, true)) {
+        if (!in_array($parent, $this->parents, true)) {
             $this->parents[] = $parent;
         }
     }

@@ -37,10 +37,12 @@ class Simplifier extends AbstractVisitor
     public function leaveFunc(Func $func)
     {
         // Remove trivial PHI functions
+        /*
         if ($func->cfg) {
             $this->trivialPhiCandidates = new \SplObjectStorage();
             $this->removeTrivialPhi($func->cfg);
         }
+        */
     }
 
     public function enterOp(Op $op, Block $block)

@@ -11,27 +11,36 @@ declare(strict_types=1);
 
 namespace PHPCfg\Op\Expr;
 
+use PHPCfg\Block;
 use PHPCfg\Op\Expr;
 use PhpCfg\Operand;
 
 class StaticCall extends Expr
 {
-    public Operand$class;
+    public Operand $class;
 
-    public Operand$name;
+    public Operand $name;
 
     public array $args;
 
-    public function __construct(Operand $class, Operand $name, array $args, array $attributes = [])
+    public Block $call;
+
+    public function __construct(Operand $class, Operand $name, array $args, array $attributes, ?Block $call)
     {
         parent::__construct($attributes);
         $this->class = $this->addReadRef($class);
         $this->name = $this->addReadRef($name);
         $this->args = $this->addReadRefs(...$args);
+        $this->call = $call;
     }
 
     public function getVariableNames(): array
     {
         return ['class', 'name', 'args', 'result'];
+    }
+
+    public function getSubBlocks(): array
+    {
+        return ['call'];
     }
 }

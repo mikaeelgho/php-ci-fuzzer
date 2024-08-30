@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace PHPCfg\Printer;
 
 use PHPCfg\Func;
+use PHPCfg\Op;
 use PHPCfg\Printer;
 use PHPCfg\Script;
 use phpDocumentor\GraphViz\Edge;
@@ -40,9 +41,15 @@ class GraphViz extends Printer
     {
         $i = 0;
         $graph = $this->createGraph();
-        $this->printFuncWithHeader($script->main, $graph, 'func_'.++$i.'_');
+        $rendered = [];
+        $nodes = new \SplObjectStorage();
+        $this->printFuncWithHeader($script->main, $graph, $nodes, $rendered, 'func_' . ++$i . '_');
         foreach ($script->functions as $func) {
-            $this->printFuncWithHeader($func, $graph, 'func_'.++$i.'_');
+            $this->printFuncWithHeader($func, $graph, $nodes, $rendered, 'func_' . ++$i . '_');
+        }
+        $this->addEdges($script->main->getScopedName(), $graph, $nodes, $rendered);
+        foreach ($script->functions as $func) {
+            $this->addEdges($func->getScopedName(), $graph, $nodes, $rendered);
         }
 
         return $graph;
@@ -60,7 +67,7 @@ class GraphViz extends Printer
     {
         $graph = Graph::create('vars');
         foreach ($this->options['graph'] as $name => $value) {
-            $setter = 'set'.$name;
+            $setter = 'set' . $name;
             $graph->{$setter}($value);
         }
         $rendered = $this->render($func->cfg);
@@ -71,7 +78,7 @@ class GraphViz extends Printer
             }
             $id = $rendered['varIds'][$var];
             $output = $this->renderOperand($var);
-            $nodes[$var] = $this->createNode('var_'.$id, $output);
+            $nodes[$var] = $this->createNode('var_' . $id, $output);
             $graph->setNode($nodes[$var]);
         }
         foreach ($rendered['varIds'] as $var) {
@@ -79,18 +86,18 @@ class GraphViz extends Printer
                 $b = $write->getAttribute('block');
                 foreach ($write->getVariableNames() as $varName) {
                     $vs = $write->{$varName};
-                    if (! is_array($vs)) {
+                    if (!is_array($vs)) {
                         $vs = [$vs];
                     }
                     foreach ($vs as $v) {
-                        if (! $v || $write->isWriteVariable($varName) || ! $nodes->contains($v)) {
+                        if (!$v || $write->isWriteVariable($varName) || !$nodes->contains($v)) {
                             continue;
                         }
                         $edge = $this->createEdge($nodes[$v], $nodes[$var]);
                         if ($b) {
-                            $edge->setlabel('Block<'.$rendered['blockIds'][$b].'>'.$write->getType().':'.$varName);
+                            $edge->setlabel('Block<' . $rendered['blockIds'][$b] . '>' . $write->getType() . ':' . $varName);
                         } else {
-                            $edge->setlabel($write->getType().':'.$varName);
+                            $edge->setlabel($write->getType() . ':' . $varName);
                         }
                         $graph->link($edge);
                     }
@@ -101,7 +108,7 @@ class GraphViz extends Printer
         return $graph;
     }
 
-    protected function printFuncWithHeader(Func $func, Graph $graph, $prefix)
+    protected function printFuncWithHeader(Func $func, Graph $graph, \SplObjectStorage $nodes, array &$rendered, $prefix)
     {
         $name = $func->getScopedName();
         $header = $this->createNode(
@@ -109,28 +116,39 @@ class GraphViz extends Printer
         );
         $graph->setNode($header);
 
-        $start = $this->printFuncInto($func, $graph, $prefix);
+        $start = $this->printFuncInto($func, $graph, $nodes, $rendered, $prefix);
         $edge = $this->createEdge($header, $start);
         $graph->link($edge);
     }
 
-    protected function printFuncInto(Func $func, Graph $graph, $prefix)
+    protected function printFuncInto(Func $func, Graph $graph, \SplObjectStorage $nodes, array &$rendered, $prefix)
     {
-        $rendered = $this->render($func);
-        $nodes = new \SplObjectStorage();
-        foreach ($rendered['blocks'] as $block) {
-            $blockId = $rendered['blockIds'][$block];
-            $ops = $rendered['blocks'][$block];
+        $newRendered = $this->render($func);
+        $rendered[$func->getScopedName()] = $newRendered;
+        foreach ($newRendered['blocks'] as $block) {
+            $blockId = $newRendered['blockIds'][$block];
+            $ops = $newRendered['blocks'][$block];
             $output = '';
+            /**
+             * @var OP $firstOp
+             */
+            //$firstOp = $ops[0]['op'];
+            //$output .= $this->indent("\n" . ($firstOp->getFile()) . ":" . ($firstOp->getLine()));
+            //$output .= $this->indent("\n" . $ops[0]['label']) . ($firstOp->getFile()) . " " . ($firstOp->getLine());
             foreach ($ops as $op) {
-                $output .= $this->indent("\n".$op['label']);
+                $output .= $this->indent("\n" . $op['label']);
             }
-            $nodes[$block] = $this->createNode($prefix.'block_'.$blockId, $output);
+            $nodes[$block] = $this->createNode($prefix . 'block_' . $blockId, $output);
             $graph->setNode($nodes[$block]);
         }
 
-        foreach ($rendered['blocks'] as $block) {
-            foreach ($rendered['blocks'][$block] as $op) {
+        return $nodes[$func->cfg];
+    }
+
+    public function addEdges(string $funcScopedName, Graph $graph, \SplObjectStorage $nodes, array $rendered)
+    {
+        foreach ($rendered[$funcScopedName]['blocks'] as $block) {
+            foreach ($rendered[$funcScopedName]['blocks'][$block] as $op) {
                 foreach ($op['childBlocks'] as $child) {
                     $edge = $this->createEdge($nodes[$block], $nodes[$child['block']]);
                     $edge->setlabel($child['name']);
@@ -138,8 +156,6 @@ class GraphViz extends Printer
                 }
             }
         }
-
-        return $nodes[$func->cfg];
     }
 
     /**
@@ -158,7 +174,7 @@ class GraphViz extends Printer
     {
         $graph = Graph::create('cfg');
         foreach ($this->options['graph'] as $name => $value) {
-            $setter = 'set'.$name;
+            $setter = 'set' . $name;
             $graph->{$setter}($value);
         }
 
@@ -169,7 +185,7 @@ class GraphViz extends Printer
     {
         $node = new Node($id, $content);
         foreach ($this->options['node'] as $name => $value) {
-            $node->{'set'.$name}($value);
+            $node->{'set' . $name}($value);
         }
 
         return $node;
@@ -179,7 +195,7 @@ class GraphViz extends Printer
     {
         $edge = new Edge($from, $to);
         foreach ($this->options['edge'] as $name => $value) {
-            $edge->{'set'.$name}($value);
+            $edge->{'set' . $name}($value);
         }
 
         return $edge;

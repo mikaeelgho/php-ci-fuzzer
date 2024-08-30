@@ -33,7 +33,7 @@ class Phi extends Op
         if ($op === $this->result) {
             return;
         }
-        if (! $this->hasOperand($op)) {
+        if (!$this->hasOperand($op)) {
             $this->vars[] = $this->addReadRef($op);
         }
     }

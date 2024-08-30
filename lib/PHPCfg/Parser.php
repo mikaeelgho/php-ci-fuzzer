@@ -60,7 +60,7 @@ class Parser
     public function __construct(AstParser $astParser, AstTraverser $astTraverser = null)
     {
         $this->astParser = $astParser;
-        if (! $astTraverser) {
+        if (!$astTraverser) {
             $astTraverser = new AstTraverser();
         }
         $this->astTraverser = $astTraverser;
@@ -80,7 +80,7 @@ class Parser
     }
 
     /**
-     * @param array  $ast      PHP-Parser AST
+     * @param array $ast PHP-Parser AST
      * @param string $fileName
      */
     public function parseAst($ast, $fileName): Script
@@ -130,7 +130,7 @@ class Parser
             $this->writeVariableName($param->name->value, $param->result, $start);
             $start->children[] = $param;
         }
-        
+
         $this->block = $tmp;
 
         $end = $this->parseNodes($stmts, $start);
@@ -171,13 +171,13 @@ class Parser
         }
 
         $type = $node->getType();
-        if (method_exists($this, 'parse'.$type)) {
-            $this->{'parse'.$type}($node);
+        if (method_exists($this, 'parse' . $type)) {
+            $this->{'parse' . $type}($node);
 
             return;
         }
 
-        throw new \RuntimeException('Unknown Node Encountered : '.$type);
+        throw new \RuntimeException('Unknown Node Encountered : ' . $type);
     }
 
     protected function parseTypeNode(?Node $node): Op\Type
@@ -202,7 +202,7 @@ class Parser
             foreach ($node->types as $type) {
                 $parsedTypes[] = $this->parseTypeNode($type);
             }
-            
+
             return new Op\Type\Union(
                 $parsedTypes,
                 $this->mapAttributes($node)
@@ -241,7 +241,7 @@ class Parser
 
     protected function parseStmt_ClassConst(Stmt\ClassConst $node)
     {
-        if (! $this->currentClass instanceof Operand) {
+        if (!$this->currentClass instanceof Operand) {
             throw new \RuntimeException('Unknown current class');
         }
         foreach ($node->consts as $const) {
@@ -261,7 +261,7 @@ class Parser
 
     protected function parseStmt_ClassMethod(Stmt\ClassMethod $node)
     {
-        if (! $this->currentClass instanceof Operand) {
+        if (!$this->currentClass instanceof Operand) {
             throw new \RuntimeException('Unknown current class');
         }
 
@@ -288,9 +288,9 @@ class Parser
         $this->block->children[] = $class_method = new Op\Stmt\ClassMethod(
             $func,
             $visibility,
-            (bool) $static,
-            (bool) $final,
-            (bool) $abstract,
+            (bool)$static,
+            (bool)$final,
+            (bool)$abstract,
             $this->parseAttributeGroups($node->attrGroups),
             $this->mapAttributes($node)
         );
@@ -356,7 +356,7 @@ class Parser
         $this->block->children[] = new Jump($loopInit, $this->mapAttributes($node));
         $loopInit->addParent($this->block);
         $this->block = $loopInit;
-        if (! empty($node->cond)) {
+        if (!empty($node->cond)) {
             $cond = $this->readVariable($this->parseExprNode($node->cond));
         } else {
             $cond = new Literal(true);
@@ -455,12 +455,12 @@ class Parser
         $this->block = new Block();
         $this->block->dead = true;
     }
-    
+
     protected function parseStmt_GroupUse(Stmt\GroupUse $node)
     {
         // ignore use statements, since names are already resolved
     }
-    
+
     protected function parseStmt_HaltCompiler(Stmt\HaltCompiler $node)
     {
         $this->block->children[] = new Op\Terminal\Echo_(
@@ -581,8 +581,8 @@ class Parser
             $this->block->children[] = new Op\Stmt\Property(
                 $this->parseExprNode($prop->name),
                 $visibility,
-                (bool) $static,
-                (bool) $readonly,
+                (bool)$static,
+                (bool)$readonly,
                 $this->parseAttributeGroups($node->attrGroups),
                 $this->parseTypeNode($node->type),
                 $defaultVar,
@@ -640,7 +640,7 @@ class Parser
         $prevBlock = null;
         foreach ($node->cases as $case) {
             $ifBlock = new Block();
-            if ($prevBlock && ! $prevBlock->dead) {
+            if ($prevBlock && !$prevBlock->dead) {
                 $prevBlock->children[] = new Jump($ifBlock);
                 $ifBlock->addParent($prevBlock);
             }
@@ -665,7 +665,7 @@ class Parser
             $prevBlock = $this->parseNodes($case->stmts, $ifBlock);
         }
 
-        if ($prevBlock && ! $prevBlock->dead) {
+        if ($prevBlock && !$prevBlock->dead) {
             $prevBlock->children[] = new Jump($endBlock);
             $endBlock->addParent($prevBlock);
         }
@@ -702,11 +702,11 @@ class Parser
     {
         $traits = [];
         $adaptations = [];
-        foreach($node->traits as $trait_) {
-            $traits[] = new Literal($trait_->toCodeString()); 
+        foreach ($node->traits as $trait_) {
+            $traits[] = new Literal($trait_->toCodeString());
         }
-        foreach($node->adaptations as $adaptation) {
-            if($adaptation instanceof Stmt\TraitUseAdaptation\Alias) {
+        foreach ($node->adaptations as $adaptation) {
+            if ($adaptation instanceof Stmt\TraitUseAdaptation\Alias) {
                 $adaptations[] = new Alias(
                     $adaptation->trait != null ? new Literal($adaptation->trait->toCodeString()) : null,
                     new Literal($adaptation->method->name),
@@ -714,10 +714,9 @@ class Parser
                     $adaptation->newModifier,
                     $this->mapAttributes($adaptation)
                 );
-            }
-            else if($adaptation instanceof Stmt\TraitUseAdaptation\Precedence) {
+            } else if ($adaptation instanceof Stmt\TraitUseAdaptation\Precedence) {
                 $insteadofs = [];
-                foreach($adaptation->insteadof as $insteadof) {
+                foreach ($adaptation->insteadof as $insteadof) {
                     $insteadofs[] = new Literal($insteadof->toCodeString());
                 }
                 $adaptations[] = new Precedence(
@@ -728,7 +727,7 @@ class Parser
                 );
             }
         }
-        $this->block->children[] = new TraitUse($traits,$adaptations,$this->mapAttributes($node));
+        $this->block->children[] = new TraitUse($traits, $adaptations, $this->mapAttributes($node));
     }
 
     protected function parseStmt_TryCatch(Stmt\TryCatch $node)
@@ -772,7 +771,7 @@ class Parser
 
     /**
      * @param Node[] $expr
-     * @param int    $readWrite
+     * @param int $readWrite
      *
      * @return Operand[]
      */
@@ -848,7 +847,7 @@ class Parser
                 'Expr_AssignOp_ShiftRight' => Op\Expr\BinaryOp\ShiftRight::class,
             ][$expr->getType()];
             if (empty($class)) {
-                throw new \RuntimeException('AssignOp Not Found: '.$expr->getType());
+                throw new \RuntimeException('AssignOp Not Found: ' . $expr->getType());
             }
             $attrs = $this->mapAttributes($expr);
             $this->block->children[] = $op = new $class($read, $e, $attrs);
@@ -892,7 +891,7 @@ class Parser
                 'Expr_BinaryOp_Spaceship' => Op\Expr\BinaryOp\Spaceship::class,
             ][$expr->getType()];
             if (empty($class)) {
-                throw new \RuntimeException('BinaryOp Not Found: '.$expr->getType());
+                throw new \RuntimeException('BinaryOp Not Found: ' . $expr->getType());
             }
             $this->block->children[] = $op = new $class($left, $right, $this->mapAttributes($expr));
 
@@ -911,14 +910,14 @@ class Parser
 
             ][$expr->getType()];
             if (empty($class)) {
-                throw new \RuntimeException('Cast Not Found: '.$expr->getType());
+                throw new \RuntimeException('Cast Not Found: ' . $expr->getType());
             }
             $this->block->children[] = $op = new $class($e, $this->mapAttributes($expr));
 
             return $op->result;
         }
 
-        $method = 'parse'.$expr->getType();
+        $method = 'parse' . $expr->getType();
         if (method_exists($this, $method)) {
             $op = $this->{$method}($expr);
             if ($op instanceof Op) {
@@ -930,7 +929,7 @@ class Parser
                 return $op;
             }
         } else {
-            throw new \RuntimeException('Unknown Expr Type '.$expr->getType());
+            throw new \RuntimeException('Unknown Expr Type ' . $expr->getType());
         }
 
         throw new \RuntimeException('Invalid state, should never happen');
@@ -951,7 +950,7 @@ class Parser
     protected function parseAttributeGroup(Node\AttributeGroup $attrGroup)
     {
         $attrs = array_map([$this, 'parseAttribute'], $attrGroup->attrs);
-        
+
         return new Op\Attributes\AttributeGroup($attrs, $this->mapAttributes($attrGroup));
     }
 
@@ -1048,7 +1047,7 @@ class Parser
         $flags |= $expr->static ? Func::FLAG_STATIC : 0;
 
         $this->script->functions[] = $func = new Func(
-            '{anonymous}#'.++$this->anonId,
+            '{anonymous}#' . ++$this->anonId,
             $flags,
             $this->parseTypeNode($expr->returnType),
             null,
@@ -1262,7 +1261,7 @@ class Parser
         } else {
             $classExpr = $expr->class;
         }
-        
+
         return new Op\Expr\New_(
             $this->readVariable($this->parseExprNode($classExpr)),
             $this->parseExprList($expr->args, self::MODE_READ),
@@ -1330,11 +1329,18 @@ class Parser
 
     protected function parseExpr_StaticCall(Expr\StaticCall $expr)
     {
+        $class = $this->readVariable($this->parseExprNode($expr->class));
+        $name = $this->readVariable($this->parseExprNode($expr->name));
+        foreach (Func::findRelatedMethodBlocks($class, $name) as $methodBlock) {
+            $this->block->children[] = $methodBlock;
+        }
+
         return new Op\Expr\StaticCall(
-            $this->readVariable($this->parseExprNode($expr->class)),
-            $this->readVariable($this->parseExprNode($expr->name)),
+            $class,
+            $name,
             $this->parseExprList($expr->args, self::MODE_READ),
-            $this->mapAttributes($expr)
+            $this->mapAttributes($expr),
+            current(Func::findRelatedMethodBlocks($class, $name))->cfg
         );
     }
 
@@ -1385,7 +1391,7 @@ class Parser
 
         $this->block = $endBlock;
         $result = new Temporary();
-        $phi = new Op\Phi($result, ['block' => $this->block]);
+        $phi = new Op\Phi($result, array_merge($this->mapAttributes($expr), ['block' => $this->block]));
         $phi->addOperand($ifVar);
         $phi->addOperand($elseVar);
         $this->block->phi[] = $phi;
@@ -1475,8 +1481,8 @@ class Parser
     {
         foreach ($node->cases as $case) {
             if (null !== $case->cond
-                    && ! $case->cond instanceof Node\Scalar\LNumber
-                    && ! $case->cond instanceof Node\Scalar\String_) {
+                && !$case->cond instanceof Node\Scalar\LNumber
+                && !$case->cond instanceof Node\Scalar\String_) {
                 return false;
             }
         }
@@ -1495,7 +1501,7 @@ class Parser
         $block = null;
         foreach ($node->cases as $case) {
             $caseBlock = new Block($this->block);
-            if ($block && ! $block->dead) {
+            if ($block && !$block->dead) {
                 // wire up!
                 $block->children[] = new Jump($caseBlock);
                 $caseBlock->addParent($block);
@@ -1517,7 +1523,7 @@ class Parser
             $defaultBlock,
             $this->mapAttributes($node)
         );
-        if ($block && ! $block->dead) {
+        if ($block && !$block->dead) {
             // wire end of block to endblock
             $block->children[] = new Jump($endBlock);
             $endBlock->addParent($block);
@@ -1555,7 +1561,7 @@ class Parser
                 // TODO
                 return new Literal('__FUNCTION__');
             default:
-                throw new \RuntimeException('Unknown how to deal with scalar type '.$scalar->getType());
+                throw new \RuntimeException('Unknown how to deal with scalar type ' . $scalar->getType());
         }
     }
 
@@ -1614,7 +1620,7 @@ class Parser
         $endBlock->addParent($this->block);
 
         $this->block = $endBlock;
-        $phi = new Op\Phi($result, ['block' => $this->block]);
+        $phi = new Op\Phi($result, array_merge($this->mapAttributes($expr), ['block' => $this->block]));
         $phi->addOperand(new Literal($isOr));
         $phi->addOperand($boolCast->result);
         $this->block->phi[] = $phi;
@@ -1695,7 +1701,7 @@ class Parser
     private function readVariableRecursive($name, Block $block)
     {
         if ($this->ctx->complete) {
-            if (count($block->parents) === 1 && ! $block->parents[0]->dead) {
+            if (count($block->parents) === 1 && !$block->parents[0]->dead) {
                 // Special case, just return the read var
                 return $this->readVariableName($name, $block->parents[0]);
             }
@@ -1721,6 +1727,7 @@ class Parser
 
         return $var;
     }
+
 
     private function getVariableName(Operand\Variable $var)
     {

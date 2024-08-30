@@ -15,6 +15,8 @@ use PHPCfg\Op\CallableOp;
 
 class Func extends Op
 {
+    private static array $allFunctions = [];
+
     /* Constants for the $flags property.
      * The first six flags match PhpParser Class_ flags. */
     const FLAG_PUBLIC = 0x01;
@@ -63,14 +65,32 @@ class Func extends Op
         $this->class = $class;
         $this->params = [];
         $this->cfg = new Block();
+        Func::$allFunctions[] = $this;
     }
 
-    public function getScopedName()
+    public function getScopedName(): string
     {
         if (null !== $this->class) {
-            return $this->class->value.'::'.$this->name;
+            return $this->class->value . '::' . $this->name;
         }
 
         return $this->name;
+    }
+
+    public static function findRelatedMethodBlocks(?Operand $className, Operand $methodName): array
+    {
+        if ((is_null($className) || $className instanceof Operand\Literal) && $methodName instanceof Operand\Literal) {
+            $scopedName = $methodName->value;
+            if (null !== $className) {
+                $scopedName = $className->value . '::' . $methodName->value;
+            }
+
+            foreach (Func::$allFunctions as $func) {
+                if ($func->getScopedName() == $scopedName) {
+                    return [$func];
+                }
+            }
+        }
+        return [];
     }
 }
